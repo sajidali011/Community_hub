@@ -317,14 +317,12 @@
 
                 </nav>
                 <!-- End of Topbar -->
-
 <!-- Begin Page Content --> 
 <div class="container-fluid">
     <!-- Page Heading -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
     </div>
-
     <!-- Overview Cards Row -->
     <div class="row">
         <!-- Active Communities Card -->
@@ -372,7 +370,6 @@
             </div>
         </div>
     </div>
-
     <!-- Latest Content Created -->
     <div class="row mb-4">
         <div class="col-xl-8 col-lg-7">
@@ -404,7 +401,6 @@
                 </div>
             </div>
         </div>
-
         <!-- User Profile & Community Management -->
         <div class="col-xl-4 col-lg-5">
             <div class="card shadow mb-4">
@@ -497,5 +493,4 @@
     <script src="js/demo/chart-pie-demo.js"></script>
 
 </body>
-
 </html>

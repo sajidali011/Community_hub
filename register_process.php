@@ -18,27 +18,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = mysqli_real_escape_string($conn, $_POST['password']); // Plain text for now
 
-    // Handle file upload
-    $uploadDir = "uploads/";
-    $fileName = basename($_FILES["imgupload"]["name"]);
-    $targetFilePath = $uploadDir . uniqid() . "-" . $fileName;
-    $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+    // Check if the email already exists in the database
+    $checkEmailQuery = "SELECT * FROM register WHERE email = '$email'";
+    $result = mysqli_query($conn, $checkEmailQuery);
 
-    if (in_array($fileType, ["jpg", "jpeg", "png", "gif"])) {
-        if (move_uploaded_file($_FILES["imgupload"]["tmp_name"], $targetFilePath)) {
-            // Insert data into database
-            $sql = "INSERT INTO register (imgupload, firstname, username, email, password) 
-                    VALUES ('$targetFilePath', '$firstname', '$username', '$email', '$password')";
-            if (mysqli_query($conn, $sql)) {
-                echo "Registration successful! <a href='login.html'>Login</a>";
+    if (mysqli_num_rows($result) > 0) {
+        // Email already exists
+        echo "<script>alert('This email is already registered. Please use a different email.');</script>";
+    } else {
+        // Check if file is uploaded
+        if (isset($_FILES['imgupload']) && $_FILES['imgupload']['error'] == 0) {
+            // Define upload directory
+            $uploadDir = "uploads/";
+
+            // Create directory if it doesn't exist
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true); // Create directory with write permissions
+            }
+
+            $fileName = basename($_FILES["imgupload"]["name"]);
+            $targetFilePath = $uploadDir . uniqid() . "-" . $fileName;
+            $fileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+
+            // Check if file type is allowed
+            if (in_array($fileType, ["jpg", "jpeg", "png", "gif"])) {
+                // Move uploaded file to target directory
+                if (move_uploaded_file($_FILES["imgupload"]["tmp_name"], $targetFilePath)) {
+                    // Insert data into database with the image URL (relative path)
+                    $sql = "INSERT INTO register (imgupload, firstname, username, email, password) 
+                            VALUES ('$targetFilePath', '$firstname', '$username', '$email', '$password')";
+                    if (mysqli_query($conn, $sql)) {
+                        echo "<script>alert('Registration successful! Please login.'); window.location.href='login.php';</script>";
+                    } else {
+                        echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+                    }
+                } else {
+                    echo "<script>alert('Error uploading the file. Please try again.');</script>";
+                }
             } else {
-                echo "Error: " . mysqli_error($conn);
+                echo "<script>alert('Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.');</script>";
             }
         } else {
-            echo "Error uploading the file.";
+            echo "<script>alert('Please select a profile image.');</script>";
         }
-    } else {
-        echo "Invalid file type. Only JPG, JPEG, PNG, and GIF are allowed.";
     }
 }
 
