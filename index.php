@@ -1,3 +1,38 @@
+<?php
+include("db_connection.php");
+// Start the session to retrieve user info
+session_start();
+
+// Check if the user is logged in
+if (!isset($_SESSION['email'])) {
+    echo "<script>alert('Please log in to view this page.'); window.location.href='login.php';</script>";
+    exit;
+}
+
+// Get the logged-in user's email from the session
+$user_email = $_SESSION['email'];
+
+// Query to fetch the user's profile info
+$sql = "SELECT firstname, imgupload FROM register WHERE email = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $user_email); // Bind the email parameter
+$stmt->execute();
+$result = $stmt->get_result();
+
+// Check if user exists
+if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $firstname = $row['firstname'];
+    $profile_image = $row['imgupload'] ? $row['imgupload'] : 'img/undraw_profile.svg'; // Default image if not set
+} else {
+    $firstname = "Guest";
+    $profile_image = 'img/undraw_profile.svg'; // Default image if user not found
+}
+
+// Close the connection
+$stmt->close();
+$conn->close();
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -109,20 +144,11 @@
 
 <!-- Nav Item - Settings -->
 <li class="nav-item">
-    <a class="nav-link" href="#settings">
+    <a class="nav-link" href="settings.php">
         <i class="fas fa-fw fa-cogs"></i>
         <span>Settings</span>
     </a>
 </li>
-
-<!-- Nav Item - Logout -->
-<li class="nav-item">
-    <a class="nav-link" href="#logout">
-        <i class="fas fa-fw fa-sign-out-alt"></i>
-        <span>Logout</span>
-    </a>
-</li>
-
 <!-- Divider -->
 <hr class="sidebar-divider">
 
@@ -202,29 +228,28 @@
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
 
-                        <!-- Nav Item - Search Dropdown (Visible Only XS) -->
-                        <li class="nav-item dropdown no-arrow d-sm-none">
-                            <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-search fa-fw"></i>
-                            </a>
-                            <!-- Dropdown - Messages -->
-                            <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-                                aria-labelledby="searchDropdown">
-                                <form class="form-inline mr-auto w-100 navbar-search">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control bg-light border-0 small"
-                                            placeholder="Search for..." aria-label="Search"
-                                            aria-describedby="basic-addon2">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-primary" type="button">
-                                                <i class="fas fa-search fa-sm"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </li>
+<!-- Nav Item - Search Dropdown (Visible Only XS) -->
+<li class="nav-item dropdown no-arrow d-sm-none">
+    <a class="nav-link dropdown-toggle" href="javascript:void(0);" id="searchDropdown" role="button"
+        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fas fa-search fa-fw"></i>
+    </a>
+    <!-- Dropdown - Search Form -->
+    <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
+        aria-labelledby="searchDropdown">
+        <form class="form-inline" method="GET" action="search.php">
+            <div class="input-group">
+                <input type="text" class="form-control bg-light border-0 small" placeholder="Search for username..."
+                    aria-label="Search" name="username" required>
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search fa-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</li>
 
                         <!-- Nav Item - Alerts -->
                         <li class="nav-item dropdown no-arrow mx-1">
@@ -284,12 +309,15 @@
 
                         <!-- Nav Item - User Information -->
                         <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">user name</span>
-                                <img class="img-profile rounded-circle"
-                                    src="img/undraw_profile.svg">
-                            </a>
+                        
+
+<!-- The Dropdown with dynamic data -->
+<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo htmlspecialchars($firstname); ?></span>
+    <img class="img-profile rounded-circle" src="<?php echo htmlspecialchars($profile_image); ?>" alt="Profile Image">
+   </a>
+
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
@@ -409,11 +437,8 @@
                 </div>
                 <div class="card-body">
                     <div class="list-group">
-                        <a href="#" class="list-group-item list-group-item-action">
+                        <a href="user_profile.php" class="list-group-item list-group-item-action">
                             <i class="fas fa-user-edit mr-2"></i>Edit Global Profile
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action">
-                            <i class="fas fa-key mr-2"></i>Change Password
                         </a>
                         <a href="#" class="list-group-item list-group-item-action">
                             <i class="fas fa-users-cog mr-2"></i>Manage Communities
@@ -469,7 +494,7 @@
                 <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
-                    <a class="btn btn-primary" href="login.html">Logout</a>
+                    <a class="btn btn-primary" href="logout.php">Logout</a>
                 </div>
             </div>
         </div>

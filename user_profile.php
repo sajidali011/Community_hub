@@ -1,3 +1,53 @@
+<?php
+// Database connection details
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "community_hub";
+
+// Start session to get logged-in user's information
+session_start();
+
+// Check if the user is logged in
+if (!isset($_SESSION['email'])) {
+    echo "<script>alert('Please log in to view this page.'); window.location.href='login.php';</script>";
+    exit;
+}
+
+// Get the current email from session
+$current_email = $_SESSION['email'];
+
+// Create a connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Query to fetch data from the 'register' table using email
+$sql = "SELECT imgupload, firstname, username FROM register WHERE email = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $current_email); // Bind the email parameter
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    // Fetch the user's data
+    $row = $result->fetch_assoc();
+    $imgupload = $row['imgupload'] ? $row['imgupload'] : 'default-avatar.png'; // Default if no image
+    $firstname = $row['firstname'];
+    $username = $row['username'];
+} else {
+    echo "<script>alert('No data found for this user!'); window.location.href='login.php';</script>";
+    exit;
+}
+
+// Close the database connection
+$stmt->close();
+$conn->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,175 +55,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
-
-    <!-- Bootstrap CSS (latest version) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Font Awesome Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
-    <!-- Custom CSS for Profile -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
     <style>
         body {
-            background: #f4f7fc;
-            font-family: 'Nunito', sans-serif;
+            font-family: 'Open Sans', sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
 
         .profile-container {
-            padding: 40px 0;
-        }
-
-        .profile-card {
+            background: #fff;
             border-radius: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-image-container {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 360px;
+            padding: 30px;
             text-align: center;
-            margin: 0 auto;
+            transition: transform 0.3s ease;
         }
 
-        .profile-image-container img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            transition: all 0.3s ease;
+        .profile-container:hover {
+            transform: translateY(-5px);
         }
 
-        .btn-upload {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            background-color: #007bff;
-            color: white;
-            border-radius: 50%;
-            padding: 10px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn-upload:hover {
-            background-color: #0056b3;
-        }
-
-        .bio-section {
-            margin-top: 20px;
-        }
-
-        .bio-section h5 {
-            font-weight: bold;
-            color: #007bff;
-        }
-
-        .bio-section p {
-            font-size: 1.1rem;
-            color: #555;
-        }
-
-        .profile-info h4 {
-            font-size: 1.8rem;
+        .profile-container h1 {
+            font-size: 28px;
             font-weight: 600;
             color: #333;
+            margin-bottom: 20px;
         }
 
-        .card-body {
-            text-align: center;
+        .profile-image img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #2575fc;
+            margin-bottom: 20px;
         }
 
-        .profile-card .btn {
-            border-radius: 30px;
-            padding: 10px 30px;
-            font-size: 1.1rem;
-            margin-top: 30px;
-            background-color: #007bff;
+        .profile-info {
+            margin-bottom: 20px;
+        }
+
+        .profile-info p {
+            font-size: 18px;
+            color: #333;
+            margin: 5px 0;
+        }
+
+        .profile-info p strong {
+            color: #4e73df;
+        }
+
+        .edit-profile-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #2575fc;
             color: white;
-            border: none;
+            text-decoration: none;
+            font-size: 16px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
         }
 
-        .profile-card .btn:hover {
-            background-color: #0056b3;
+        .edit-profile-btn:hover {
+            background-color: #6a11cb;
+        }
+
+        .cancel-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 12px 30px;
+            background-color: #e0e0e0;
+            color: #333;
+            font-size: 16px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        .cancel-btn:hover {
+            background-color: #c4c4c4;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container profile-container">
-        <div class="row justify-content-center">
-            <div class="col-xl-6 col-lg-8 col-md-10">
-                <div class="card profile-card shadow-lg">
-                    <div class="card-body">
-                        <!-- Profile Image Section -->
-                        <div class="profile-image-container mx-auto">
-                            <img id="profileImage" src="https://via.placeholder.com/150" alt="Profile Image" class="rounded-circle">
-                            <label for="imageUpload" class="btn-upload">
-                                <i class="fas fa-camera"></i>
-                            </label>
-                        </div>
+    <div class="profile-container">
+        <h1>Welcome, <?php echo htmlspecialchars($firstname); ?>!</h1>
 
-                        <!-- Change Profile Picture Button -->
-                        <input type="file" id="imageUpload" class="d-none" accept="image/*">
-
-                        <!-- User Info Section -->
-                        <div class="profile-info">
-                            <h4 id="username">John Doe</h4>
-                        </div>
-
-                        <!-- Bio Section -->
-                        <div class="bio-section">
-                            <h5 class="font-weight-bold">Bio</h5>
-                            <p id="bio">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum.</p>
-                        </div>
-
-                        <!-- Edit Profile Button -->
-                        <a href="edit-profile.html" class="btn btn-primary">Edit Profile</a>
-                    </div>
-                </div>
-            </div>
+        <div class="profile-image">
+            <img src="<?php echo htmlspecialchars($imgupload); ?>" alt="Profile Image">
         </div>
+
+        <div class="profile-info">
+            <p><strong>Username:</strong> <?php echo htmlspecialchars($username); ?></p>
+            <p><strong>First Name:</strong> <?php echo htmlspecialchars($firstname); ?></p>
+        </div>
+
+        <a href="edit_profile.php" class="edit-profile-btn">Edit Profile</a>
+        <a href="index.php" class="cancel-btn">Back to Home</a>
     </div>
-
-    <!-- Bootstrap JS (optional, if you want to use dropdowns or other interactive elements) -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
-
-    <!-- Custom JavaScript for Image Upload -->
-    <script>
-        // Image upload functionality
-        document.getElementById('imageUpload').addEventListener('change', function(event) {
-            var file = event.target.files[0];
-            var reader = new FileReader();
-
-            reader.onload = function(e) {
-                document.getElementById('profileImage').src = e.target.result;
-            };
-
-            if (file) {
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Fetch user details using JavaScript (mock data for now)
-        window.onload = function() {
-            // Fetch details from a server (e.g., login_process.php) in a real-world scenario
-            var userDetails = {
-                username: 'Jane Doe',
-                bio: 'A software developer who loves creating web applications.',
-                profileImage: 'https://via.placeholder.com/150' // URL to the user profile image
-            };
-
-            // Set the fetched details
-            document.getElementById('username').textContent = userDetails.username;
-            document.getElementById('bio').textContent = userDetails.bio;
-            document.getElementById('profileImage').src = userDetails.profileImage;
-        };
-    </script>
 
 </body>
 
