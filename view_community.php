@@ -1,6 +1,10 @@
 <?php
-// Include database connection
-include 'db_connection.php'; // Ensure this file contains $conn with a successful connection
+// Database connection
+$conn = new mysqli("localhost", "root", "", "community_hub");
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
 // Start the session to track the logged-in user
 session_start();
@@ -17,8 +21,8 @@ if (!$user_id) {
 
 // Handle form submission for adding or updating posts
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = mysqli_real_escape_string($conn, $_POST['title']);
-    $content = mysqli_real_escape_string($conn, $_POST['content']);
+    $title = $conn->real_escape_string($_POST['title']);
+    $content = $conn->real_escape_string($_POST['content']);
     $image = '';
 
     // Handle image upload
@@ -53,7 +57,6 @@ $result = $conn->query($sql);
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -133,7 +136,6 @@ $result = $conn->query($sql);
         }
     </style>
 </head>
-
 <body>
     <div class="container">
         <h2>Community Dashboard</h2>
@@ -195,5 +197,4 @@ $result = $conn->query($sql);
         </table>
     </div>
 </body>
-
 </html>
