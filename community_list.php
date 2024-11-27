@@ -207,7 +207,7 @@ $conn->close();
                         </div>
                         <div class="community-footer">
                             <span class="privacy"><?= ucfirst($community['privacy']); ?> Community</span>
-                            <a href="view_community.php?id=<?= $community['id']; ?>" class="join-btn">View</a>
+                            <a href="explore_community.php?id=<?= $community['id']; ?>" class="join-btn">View</a>
                         </div>
                     </div>
                 <?php endforeach; ?>

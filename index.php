@@ -104,15 +104,15 @@ $conn->close();
 
 <!-- Nav Item - Browse Communities -->
 <li class="nav-item">
-    <a class="nav-link" href="#browse">
+    <a class="nav-link" href="community_list.php">
         <i class="fas fa-fw fa-search"></i>
-        <span>Browse Communities</span>
+        <span>Community List</span>
     </a>
 </li>
 
 <!-- Nav Item - Create Community -->
 <li class="nav-item">
-    <a class="nav-link" href="#create">
+    <a class="nav-link" href="create_community.php">
         <i class="fas fa-fw fa-plus-circle"></i>
         <span>Create Community</span>
     </a>
@@ -120,7 +120,7 @@ $conn->close();
 
 <!-- Nav Item - Create Post -->
 <li class="nav-item">
-    <a class="nav-link" href="#createPost">
+    <a class="nav-link" href="explore_community.php">
         <i class="fas fa-fw fa-pencil-alt"></i>
         <span>Create Post</span>
     </a>
@@ -159,7 +159,7 @@ $conn->close();
 
 <!-- Nav Item - Manage Communities -->
 <li class="nav-item">
-    <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseManage"
+    <a class="nav-link collapsed" href="manage_community.php" data-toggle="collapse" data-target="#collapseManage"
         aria-expanded="true" aria-controls="collapseManage">
         <i class="fas fa-fw fa-cogs"></i>
         <span>Manage Communities</span>
