@@ -166,7 +166,7 @@ $conn->close();
     </a>
     <div id="collapseManage" class="collapse" aria-labelledby="headingManage" data-parent="#accordionSidebar">
         <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="#manageProfile">Edit Community Profile</a>
+            <a class="collapse-item" href="community_profile.php">Edit Community Profile</a>
             <a class="collapse-item" href="#manageMembers">Manage Members</a>
             <a class="collapse-item" href="#communitySettings">Community Settings</a>
         </div>

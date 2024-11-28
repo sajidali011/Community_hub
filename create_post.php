@@ -1,17 +1,22 @@
 <?php
-include 'db_connection.php';
-session_start();
+include 'db_connection.php'; // Include database connection
 
-// Check if the user is logged in
-if (!isset($_SESSION['email'])) {
-    echo "<script>alert('Please log in to create a post.'); window.location.href='login.php';</script>";
-    exit;
-}
+// Simulate logged-in user and community
+$user_id = 1; // Replace with actual logged-in user ID
+$community_id = 1; // Replace with the current community ID
 
-$community_id = $_GET['community_id'] ?? null;
-if (!$community_id) {
-    echo "<script>alert('Invalid community ID.'); window.location.href='index.php';</script>";
-    exit;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $post_title = mysqli_real_escape_string($conn, $_POST['post_title']);
+    $post_content = mysqli_real_escape_string($conn, $_POST['post_content']);
+
+    $insert_query = "INSERT INTO posts (user_id, community_id, title, content) 
+                     VALUES ($user_id, $community_id, '$post_title', '$post_content')";
+
+    if (mysqli_query($conn, $insert_query)) {
+        echo "Post created successfully!";
+    } else {
+        echo "Error creating post: " . mysqli_error($conn);
+    }
 }
 ?>
 
@@ -21,24 +26,17 @@ if (!$community_id) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Post</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <h1>Create Post for Community</h1>
-        
-        <form action="save_post.php" method="post" enctype="multipart/form-data">
-            <div class="mb-3">
-                <textarea name="content" class="form-control" rows="5" required placeholder="Enter your content here..."></textarea>
-            </div>
-            <div class="mb-3">
-                <label for="image" class="form-label">Upload Image/Video</label>
-                <input type="file" name="image" id="image" class="form-control" accept="image/*,video/*">
-            </div>
-            <input type="hidden" name="community_id" value="<?= htmlspecialchars($community_id) ?>">
-            <button type="submit" name="action" value="publish" class="btn btn-success">Publish</button>
-            <button type="submit" name="action" value="draft" class="btn btn-warning">Save as Draft</button>
-        </form>
-    </div>
+    <h1>Create a New Post</h1>
+    <form action="" method="POST">
+        <label for="post_title">Post Title:</label>
+        <input type="text" id="post_title" name="post_title" required><br>
+
+        <label for="post_content">Post Content:</label>
+        <textarea id="post_content" name="post_content" required></textarea><br>
+
+        <button type="submit">Create Post</button>
+    </form>
 </body>
 </html>
