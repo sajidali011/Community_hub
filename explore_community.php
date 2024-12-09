@@ -1,139 +1,221 @@
 <?php
-include 'db_connection.php';
+include "db_connection.php";
 session_start();
 
 // Check if the user is logged in
 if (!isset($_SESSION['email'])) {
-    echo "<script>alert('Please log in to view this page.'); window.location.href='login.php';</script>";
+    echo "<script>alert('Please log in to view the community.'); window.location.href='login.php';</script>";
     exit;
 }
 
+// Get the logged-in user's email from session
 $current_email = $_SESSION['email'];
 
-// Get user ID
-$stmt = $conn->prepare("SELECT id FROM register WHERE email = ?");
-$stmt->bind_param("s", $current_email);
-$stmt->execute();
-$user_result = $stmt->get_result();
-$user_data = $user_result->fetch_assoc();
-$current_user_id = $user_data['id'];
-$stmt->close();
+// Create a connection
+$conn = new mysqli($servername, $username, $password, $dbname);
 
-// Get community details
-$community_id = $_GET['id'] ?? null;
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Fetch the logged-in user's ID
+$sql_user = "SELECT id FROM register WHERE email = ?";
+$stmt_user = $conn->prepare($sql_user);
+$stmt_user->bind_param("s", $current_email);
+$stmt_user->execute();
+$result_user = $stmt_user->get_result();
+$user = $result_user->fetch_assoc();
+$stmt_user->close();
+
+if (!$user) {
+    echo "<script>alert('User not found.'); window.location.href='login.php';</script>";
+    exit;
+}
+$user_id = $user['id'];
+
+// Get the community ID from URL
+$community_id = $_GET['community_id'] ?? null;
 if (!$community_id) {
-    echo "<script>alert('Invalid community ID.'); window.location.href='community_list.php';</script>";
+    echo "<script>alert('Community ID is missing. Redirecting to home.'); window.location.href='index.php';</script>";
     exit;
 }
 
-$stmt = $conn->prepare("SELECT * FROM communities WHERE id = ?");
-$stmt->bind_param("i", $community_id);
-$stmt->execute();
-$community = $stmt->get_result()->fetch_assoc();
-$stmt->close();
+// Fetch the community details
+$sql_community = "SELECT name, logo FROM communities WHERE id = ?";
+$stmt_community = $conn->prepare($sql_community);
+$stmt_community->bind_param("i", $community_id);
+$stmt_community->execute();
+$result_community = $stmt_community->get_result();
+$community = $result_community->fetch_assoc();
+$stmt_community->close();
 
-// Check if the community exists
 if (!$community) {
-    echo "<script>alert('Community not found.'); window.location.href='community_list.php';</script>";
+    echo "<script>alert('Community not found.'); window.location.href='home.php';</script>";
     exit;
 }
 
-// Check if the current user is part of the community
-$stmt = $conn->prepare("SELECT * FROM community_members WHERE user_id = ? AND community_id = ?");
-$stmt->bind_param("ii", $current_user_id, $community_id);
-$stmt->execute();
-$is_member = $stmt->get_result()->num_rows > 0;
-$stmt->close();
+$community_name = $community['name'];
+$community_logo = $community['logo']; // Optional, not used yet
 
-if (!$is_member) {
-    echo "<script>alert('You are not part of this community.'); window.location.href='community_list.php';</script>";
-    exit;
-}
+// Fetch posts for the current community
+$sql_posts = "SELECT p.content, p.image, p.created_at, r.username AS author, p.id AS post_id 
+              FROM posts p
+              JOIN register r ON p.user_id = r.id
+              WHERE p.community_id = ?
+              ORDER BY p.created_at DESC";
+$stmt_posts = $conn->prepare($sql_posts);
+$stmt_posts->bind_param("i", $community_id);
+$stmt_posts->execute();
+$result_posts = $stmt_posts->get_result();
+$posts = $result_posts->fetch_all(MYSQLI_ASSOC);
+$stmt_posts->close();
 
-// Get published posts
-$stmt = $conn->prepare("SELECT * FROM posts WHERE community_id = ? AND status = 'published' ORDER BY created_at DESC");
-$stmt->bind_param("i", $community_id);
-$stmt->execute();
-$posts = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+// Fetch the user's profile image
+$sql_user_profile = "SELECT profile_image FROM community_profile WHERE user_id = ?";
+$stmt_user_profile = $conn->prepare($sql_user_profile);
+$stmt_user_profile->bind_param("i", $user_id);
+$stmt_user_profile->execute();
+$result_user_profile = $stmt_user_profile->get_result();
+$user_profile = $result_user_profile->fetch_assoc();
+$stmt_user_profile->close();
+
+$user_imgupload = !empty($user_profile['profile_image']) ? $user_profile['profile_image'] : 'uploads/default-profile.png';
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Explore Community</title>
-    <script src="https://cdn.tiny.cloud/1/387xy2rgyvd5984o4xra9ers0tskoz5fu648sp4w97zd829q/tinymce/6/tinymce.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .container { max-width: 900px; margin: 30px auto; }
-        .post-card img, .post-card video { width: 100%; max-height: 300px; object-fit: cover; }
-        .post-card { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-    </style>
-    <script>
-        tinymce.init({
-            selector: '#content',
-            plugins: 'advlist autolink link image lists charmap print preview hr anchor pagebreak code table media imagetools fullscreen insertdatetime',
-            toolbar: 'undo redo | styles | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media | table | code fullscreen',
-            image_title: true,
-            automatic_uploads: true,
-            file_picker_types: 'image media',
-            file_picker_callback: function (callback, value, meta) {
-                if (meta.filetype === 'image' || meta.filetype === 'media') {
-                    let input = document.createElement('input');
-                    input.setAttribute('type', 'file');
-                    input.setAttribute('accept', meta.filetype === 'image' ? 'image/*' : 'video/*');
-                    input.onchange = function () {
-                        let file = this.files[0];
-                        let reader = new FileReader();
-                        reader.onload = function (e) {
-                            callback(e.target.result, { title: file.name });
-                        };
-                        reader.readAsDataURL(file);
-                    };
-                    input.click();
-                }
-            },
-            menubar: true,
-            height: 500,
-            branding: false,
-        });
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/explore_community.css">
+  <style>
+    /* Card container styles */
+    .posts-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+
+    /* Post card styles */
+    .post-card {
+        background-color: #fff;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+
+    /* Hover effect on post card */
+    .post-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .post-card img,
+    .post-card video {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .post-card h4 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .post-card p {
+        color: #555;
+    }
+
+    .post-card .timestamp {
+        font-size: 12px;
+        color: #999;
+    }
+
+    /* Optional styling for post header */
+    .post-card-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .post-card-header img {
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        margin-right: 10px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Welcome to <?= htmlspecialchars($community['name']) ?> Community</h2>
-        <!-- Post Form -->
-        <form action="save_post.php" method="post" enctype="multipart/form-data">
-    <textarea id="content" name="content" class="form-control" rows="5" required></textarea>
-    <input type="hidden" name="community_id" value="<?= $community_id ?>">
-    <input type="file" name="image" class="form-control my-2" accept="image/*,video/*">
-    
-    <!-- Only Publish button, others removed -->
-    <button type="submit" name="action" value="publish" class="btn btn-success">Publish</button>
-</form>
+<!-- Menubar -->
+<div class="menubar">
+  <div class="dropdown">
+    <!-- Display the user profile image, fallback to default if not found -->
+    <img src="<?= htmlspecialchars($user_imgupload) ?>" alt="Profile Image" class="profile-img">
+    <div class="dropdown-content">
+      <a href="community_profile.php">Profile</a>
+      <a href="create_post.php?community_id=<?= $community_id ?>">Create Post</a>
+      <a href="logout.php">Logout</a>
+    </div>
+  </div>
+</div>
 
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="community-header">
+    <img src="<?= htmlspecialchars($community_logo); ?>" alt="Community Logo" class="community-logo">
+    <h2><?= htmlspecialchars($community_name); ?></h2>
+  </div>
+  <ul>
+    <li><a href="#home" onclick="showContent('home')"><i class="fas fa-home icon"></i> Home</a></li>
+    <li><a href="#community" onclick="showContent('community')"><i class="fas fa-users icon"></i> Community Overview</a></li>
+    <li><a href="#posts" onclick="showContent('posts')"><i class="fas fa-newspaper icon"></i> Recent Posts</a></li>
+    <li><a href="#guidelines" onclick="showContent('guidelines')"><i class="fas fa-book icon"></i> Guidelines</a></li>
+  </ul>
+</div>
 
-        <!-- Displaying Posts -->
-        <h3>Published Posts</h3>
+<!-- Content -->
+<div class="content">
+  <div id="posts" class="content-item active">
+    <h3>Recent Posts</h3>
+    <div class="posts-container">
         <?php if (!empty($posts)): ?>
             <?php foreach ($posts as $post): ?>
-                <div class="post-card">
-                    <?php if (strpos($post['image'], '.mp4') !== false): ?>
-                        <video controls>
-                            <source src="<?= htmlspecialchars($post['image']) ?>" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    <?php else: ?>
-                        <img src="<?= htmlspecialchars($post['image']) ?>" alt="Post Image">
+                <div class="post-card" onclick="window.location.href='show_post.php?community_id=<?= $community_id ?>&post_id=<?= $post['post_id'] ?>'">
+                    <div class="post-card-header">
+                        <img src="<?= htmlspecialchars($user_imgupload) ?>" alt="User Profile Image">
+                        <h4><?= htmlspecialchars($post['author']) ?></h4>
+                    </div>
+                    <p><?= htmlspecialchars($post['content']) ?></p>
+                    <div class="timestamp"><?= htmlspecialchars($post['created_at']) ?></div>
+
+                    <?php if (!empty($post['image'])): ?>
+                        <?php if (preg_match('/\.(mp4|webm|ogg)$/i', $post['image'])): ?>
+                            <video controls>
+                                <source src="<?= htmlspecialchars($post['image']) ?>" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        <?php else: ?>
+                            <img src="<?= htmlspecialchars($post['image']) ?>" alt="Post Image">
+                        <?php endif; ?>
                     <?php endif; ?>
-                    <p><?= htmlspecialchars(substr($post['content'], 0, 200)) ?>...</p>
-                    <a href="view_post.php?id=<?= $post['id'] ?>" class="btn btn-primary">View Post</a>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
-            <p>No posts available in this community.</p>
+            <p>No posts available.</p>
         <?php endif; ?>
     </div>
+  </div>
+</div>
+
+<script src="explore_community.js"></script>
 </body>
 </html>

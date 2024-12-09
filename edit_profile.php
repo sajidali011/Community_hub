@@ -13,7 +13,6 @@ if (!isset($_SESSION['email'])) {
     echo "<script>alert('Please log in to view this page.'); window.location.href='login.php';</script>";
     exit;
 }
-
 // Get the current email from session
 $current_email = $_SESSION['email'];
 

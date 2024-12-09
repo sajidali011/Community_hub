@@ -96,7 +96,7 @@ $conn->close();
 
 <!-- Nav Item - Communities -->
 <li class="nav-item">
-    <a class="nav-link" href="#communities">
+    <a class="nav-link" href="my_community.php">
         <i class="fas fa-fw fa-users"></i>
         <span>My Communities</span>
     </a>
@@ -120,7 +120,7 @@ $conn->close();
 
 <!-- Nav Item - Create Post -->
 <li class="nav-item">
-    <a class="nav-link" href="explore_community.php">
+    <a class="nav-link" href="community_list.php">
         <i class="fas fa-fw fa-pencil-alt"></i>
         <span>Create Post</span>
     </a>
@@ -184,16 +184,13 @@ $conn->close();
     </a>
 </li>
 
-
-            <!-- Divider -->
+<!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
 
             <!-- Sidebar Toggler (Sidebar) -->
             <div class="text-center d-none d-md-inline">
                 <button class="rounded-circle border-0" id="sidebarToggle"></button>
             </div>
-
-            
         </ul>
         <!-- End of Sidebar -->
 
@@ -213,43 +210,22 @@ $conn->close();
 
                     <!-- Topbar Search -->
                     <form
-                        class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-                        <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
-                                aria-label="Search" aria-describedby="basic-addon2">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="button">
-                                    <i class="fas fa-search fa-sm"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+    class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search"
+    action="search.php" method="get">
+    <div class="input-group">
+        <input type="text" name="query" class="form-control bg-light border-0 small" placeholder="Search for..."
+            aria-label="Search" aria-describedby="basic-addon2">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-search fa-sm"></i>
+            </button>
+        </div>
+    </div>
+</form>
+
 
                     <!-- Topbar Navbar -->
                     <ul class="navbar-nav ml-auto">
-
-<!-- Nav Item - Search Dropdown (Visible Only XS) -->
-<li class="nav-item dropdown no-arrow d-sm-none">
-    <a class="nav-link dropdown-toggle" href="javascript:void(0);" id="searchDropdown" role="button"
-        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <i class="fas fa-search fa-fw"></i>
-    </a>
-    <!-- Dropdown - Search Form -->
-    <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-        aria-labelledby="searchDropdown">
-        <form class="form-inline" method="GET" action="search.php">
-            <div class="input-group">
-                <input type="text" class="form-control bg-light border-0 small" placeholder="Search for username..."
-                    aria-label="Search" name="username" required>
-                <div class="input-group-append">
-                    <button class="btn btn-primary" type="submit">
-                        <i class="fas fa-search fa-sm"></i>
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</li>
 
                         <!-- Nav Item - Alerts -->
                         <li class="nav-item dropdown no-arrow mx-1">
@@ -257,7 +233,7 @@ $conn->close();
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-bell fa-fw"></i>
                                 <!-- Counter - Alerts -->
-                                <span class="badge badge-danger badge-counter">3+</span>
+                                <span class="badge badge-danger badge-counter">1+</span>
                             </a>
                             <!-- Dropdown - Alerts -->
                             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -284,7 +260,7 @@ $conn->close();
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-envelope fa-fw"></i>
                                 <!-- Counter - Messages -->
-                                <span class="badge badge-danger badge-counter">7</span>
+                                <span class="badge badge-danger badge-counter">1</span>
                             </a>
                             <!-- Dropdown - Messages -->
                             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"

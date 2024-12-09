@@ -42,7 +42,7 @@ if (!$user_id) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $community_name = $_POST['community_name'];
     $description = $_POST['description'];
-    $category = $_POST['category'];
+    $category = $_POST['category'] == 'Other' ? $_POST['custom_category'] : $_POST['category']; // Handle custom category input
     $privacy = $_POST['privacy'];
 
     // Handle file upload for the community logo
@@ -88,86 +88,12 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Community</title>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Open Sans', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f6f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .card {
-            background: #fff;
-            width: 400px;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            padding: 20px 30px;
-        }
-
-        .card h1 {
-            font-size: 24px;
-            color: #333;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            font-size: 14px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-
-        .form-group textarea {
-            resize: none;
-        }
-
-        .form-group input[type="file"] {
-            padding: 3px;
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            background-color: #4e73df;
-            color: #fff;
-            text-align: center;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .btn:hover {
-            background-color: #375a7f;
-        }
-    </style>
+    <link href="create_community.css" rel="stylesheet">
 </head>
 
 <body>
@@ -187,7 +113,7 @@ $conn->close();
 
             <div class="form-group">
                 <label for="category">Category</label>
-                <select id="category" name="category" required>
+                <select id="category" name="category" required onchange="toggleCustomCategoryInput()">
                     <option value="Technology">Technology</option>
                     <option value="Art">Art</option>
                     <option value="Music">Music</option>
@@ -195,6 +121,11 @@ $conn->close();
                     <option value="Education">Education</option>
                     <option value="Other">Other</option>
                 </select>
+            </div>
+
+            <div class="form-group" id="customCategoryContainer">
+                <label for="custom_category">Custom Category</label>
+                <input type="text" id="custom_category" name="custom_category" placeholder="Enter your category">
             </div>
 
             <div class="form-group">
@@ -214,6 +145,17 @@ $conn->close();
         </form>
     </div>
 
-</body>
+    <script>
+        function toggleCustomCategoryInput() {
+            var category = document.getElementById('category').value;
+            var customCategoryContainer = document.getElementById('customCategoryContainer');
+            if (category === 'Other') {
+                customCategoryContainer.style.display = 'block';
+            } else {
+                customCategoryContainer.style.display = 'none';
+            }
+        }
+    </script>
 
+</body>
 </html>

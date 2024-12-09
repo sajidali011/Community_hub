@@ -67,6 +67,7 @@ $conn->close();
             justify-content: center;
             align-items: center;
             height: 100vh;
+            transition: background-color 0.5s, color 0.5s;
         }
 
         .profile-container {
@@ -74,7 +75,7 @@ $conn->close();
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             width: 360px;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
             transition: transform 0.3s ease;
         }
@@ -114,12 +115,16 @@ $conn->close();
         }
 
         .bio-info {
+            
             margin-bottom: 20px;
+            background-color:#e7e8dc;
+            padding:7px;
+            border-radius:15px;
         }
 
         .bio-info p {
-            font-size: 16px;
-            color: #333;
+            font-size: 14px;
+            color: black;
             margin: 5px 0;
         }
 
@@ -130,8 +135,9 @@ $conn->close();
             color: white;
             text-decoration: none;
             font-size: 16px;
-            border-radius: 8px;
+            border-radius: 25px;
             transition: background-color 0.3s ease;
+            margin-right:15px;
         }
 
         .edit-profile-btn:hover {
@@ -143,30 +149,86 @@ $conn->close();
             margin-top: 10px;
             padding: 12px 30px;
             background-color: #e0e0e0;
-            color: #333;
+            color:#1E5BA1 ;
             font-size: 16px;
-            border-radius: 8px;
+            border-radius: 25px;
             text-decoration: none;
         }
 
         .cancel-btn:hover {
             background-color: #c4c4c4;
         }
+
+        .cover-pic{
+            display: block;
+            width: 100%;
+            max-height:180px;
+            object-fit:cover;
+            background-position:center;
+            border-radius:15px;
+        }
+        .image-pic{
+           
+            width: 140px;
+            border-radius: 50%;
+            margin-top: -70px;
+        }
+
+         /* Light theme styles */
+         .light {
+            background-color: white;
+            color: black;
+        }
+
+        /* Dark theme styles */
+        .dark {
+            background-color: black;
+            color: white !important;
+        }
+
+      
+.profile-container.dark {
+    background: #333; /* Dark background */
+    color: white; /* Text color in dark mode */
+}
+
+/* Additional styles for specific elements */
+.profile-container.dark h1,.profile-container.dark strong,
+.profile-container.dark p {
+    color: white; /* Ensures all text within dark theme is white */
+}
+
+.profile-container h1,
+.profile-container p {
+    color: black; /* Ensures all text within light theme is black */
+}
+.profile-container.dark .bio-info {
+    background-color: #555; /* Dark background for bio-info in dark mode */
+}   
+.profile-container.dark .profile-info strong{
+    color:yellow;
+}     
     </style>
 </head>
 
-<body>
+<body >
 
-    <div class="profile-container">
+    <div class="profile-container "class="toggle-button light" id="themeToggle">
+        
+
+
         <h1>Welcome, <?php echo htmlspecialchars($firstname); ?>!</h1>
 
+       
+        <img src="<?php echo htmlspecialchars($imgupload); ?>" alt="Profile Image" class="cover-pic" >
         <div class="profile-image">
-            <img src="<?php echo htmlspecialchars($imgupload); ?>" alt="Profile Image">
+           
+            <img src="<?php echo htmlspecialchars($imgupload); ?>" alt="Profile Image" class="image-pic" >
         </div>
-
         <div class="profile-info">
-            <p><strong>Username:</strong> <?php echo htmlspecialchars($username); ?></p>
-            <p><strong>First Name:</strong> <?php echo htmlspecialchars($firstname); ?></p>
+        <p><strong> <?php echo htmlspecialchars($firstname); ?></strong></p>
+            <p><b>Username:</b> <strong> @<?php echo htmlspecialchars($username); ?></strong></p>
+           
         </div>
 
         <div class="bio-info">
@@ -174,9 +236,29 @@ $conn->close();
         </div>
 
         <a href="edit_profile.php" class="edit-profile-btn">Edit Profile</a>
-        <a href="index.php" class="cancel-btn">Back to Home</a>
+        <a href="index.php" class="cancel-btn ">Back to Home</a>
     </div>
+    
+  
 
+   
+    <script>
+    const toggleButton = document.getElementById('themeToggle');
+    
+
+    toggleButton.onclick = function() {
+      
+        if (toggleButton.classList.contains('light')) {
+            toggleButton.classList.remove('light');
+            toggleButton.classList.add('dark');
+           
+        } else {
+            toggleButton.classList.remove('dark');
+            toggleButton.classList.add('light');
+            
+        }
+    };
+</script>
 </body>
 
 </html>
